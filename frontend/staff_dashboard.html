@@ -101,7 +101,7 @@ function escapeHtml(text) {
 }
 
 /* 📡 FETCH ASSIGNED COMPLAINTS */
-fetch("http://127.0.0.1:8000/api/complaints/staff/", {
+fetch("https://hcms-backend.onrender.com/api/complaints/staff/", {
   headers: {
     "Authorization": "Token " + token
   }
@@ -137,7 +137,7 @@ fetch("http://127.0.0.1:8000/api/complaints/staff/", {
             </h6>
             <p class="mb-2">${escapeHtml(c.description)}</p>
 
-            ${c.image ? `<img src="http://127.0.0.1:8000${c.image}" style="max-width:200px; border-radius:8px; margin-top:10px;" />` : ''}
+            ${c.image ? `<img src="https://hcms-backend.onrender.com${c.image}" style="max-width:200px; border-radius:8px; margin-top:10px;" />` : ''}
 
             <!-- ✅ STUDENT + COMPLAINT DETAILS -->
             <div class="complaint-meta">
@@ -199,7 +199,7 @@ fetch("http://127.0.0.1:8000/api/complaints/staff/", {
 function updateStatus(id) {
   const status = document.getElementById("status-" + id).value;
 
-  fetch(`http://127.0.0.1:8000/api/complaints/update/${id}/`, {
+  fetch(`https://hcms-backend.onrender.com/api/complaints/update/${id}/`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

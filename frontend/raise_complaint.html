@@ -46,7 +46,7 @@ function submitComplaint() {
   formData.append("description", description.value);
   formData.append("image", image.files[0]);
 
-  fetch("http://127.0.0.1:8000/api/complaints/raise/", {
+  fetch("https://hcms-backend.onrender.com/api/complaints/raise/", {
     method: "POST",
     headers: {
       "Authorization": "Token " + token

@@ -170,7 +170,7 @@ document.getElementById("registerForm").addEventListener("submit", async functio
 
   try {
     // REGISTER
-    const registerRes = await fetch("http://127.0.0.1:8000/api/register/", {
+    const registerRes = await fetch("https://hcms-backend.onrender.com/api/register/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -188,7 +188,7 @@ document.getElementById("registerForm").addEventListener("submit", async functio
     }
 
     // AUTO LOGIN
-    const loginRes = await fetch("http://127.0.0.1:8000/api/login/", {
+    const loginRes = await fetch("https://hcms-backend.onrender.com/api/login/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

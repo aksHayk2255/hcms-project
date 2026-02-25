@@ -52,7 +52,7 @@ if (!token || role !== "student") {
 const complaintsDiv = document.getElementById("complaints");
 
 /* 📡 FETCH COMPLAINTS */
-fetch("http://127.0.0.1:8000/api/complaints/list/", {
+fetch("https://hcms-backend.onrender.com/api/complaints/list/", {
   headers: {
     "Authorization": "Token " + token
   }

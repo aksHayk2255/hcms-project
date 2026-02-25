@@ -107,7 +107,7 @@ if (!token || role !== "student") {
 }
 
 /* 📡 LOAD COMPLAINT STATUS */
-fetch("http://127.0.0.1:8000/api/complaints/student/", {
+fetch("https://hcms-backend.onrender.com/api/complaints/student/", {
   headers: {
     "Authorization": "Token " + token
   }

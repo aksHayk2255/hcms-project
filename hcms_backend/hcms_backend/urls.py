@@ -16,11 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import HttpResponse
 from django.conf import settings
 from django.conf.urls.static import static
 from core.views import login_user, register_user
 
+
+def home(request):
+    return HttpResponse("HCMS Backend is Live 🚀")
+
 urlpatterns = [
+    path('', home),
     path("admin/", admin.site.urls),
 
     # Auth
@@ -29,6 +35,8 @@ urlpatterns = [
 
     # Complaints app
     path("api/complaints/", include("complaints.urls")),
+    # also include complaints at `api/` root (useful for some frontends)
+    path('api/', include('complaints.urls')),
 ]
 
 # Serve media files during development

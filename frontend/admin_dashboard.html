@@ -40,7 +40,7 @@ let staffList = [];
 /* ======================
    LOAD STAFF LIST
 ====================== */
-fetch("http://127.0.0.1:8000/api/complaints/staff-list/", {
+fetch("https://hcms-backend.onrender.com/api/complaints/staff-list/", {
   headers: { "Authorization": "Token " + token }
 })
 .then(res => res.json())
@@ -50,7 +50,7 @@ fetch("http://127.0.0.1:8000/api/complaints/staff-list/", {
 /* ======================
    LOAD COMPLAINTS
 ====================== */
-fetch("http://127.0.0.1:8000/api/complaints/all/", {
+fetch("https://hcms-backend.onrender.com/api/complaints/all/", {
   headers: { "Authorization": "Token " + token }
 })
 .then(res => {
@@ -92,7 +92,7 @@ function renderComplaints(data) {
         </h5>
         <p>${c.description}</p>
 
-        ${c.image ? `<img src="http://127.0.0.1:8000${c.image}" style="max-width:200px; border-radius:8px; margin-top:10px;" />` : ''}
+        ${c.image ? `<img src="https://hcms-backend.onrender.com${c.image}" style="max-width:200px; border-radius:8px; margin-top:10px;" />` : ''}
 
         <p><strong>Student:</strong> ${c.student}</p>
 
@@ -149,7 +149,7 @@ function statusColor(status) {
    UPDATE STATUS
 ====================== */
 function updateStatus(id, status) {
-  fetch(`http://127.0.0.1:8000/api/complaints/update/${id}/`, {
+  fetch(`https://hcms-backend.onrender.com/api/complaints/update/${id}/`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -169,7 +169,7 @@ function updateStatus(id, status) {
    ASSIGN STAFF
 ====================== */
 function assignStaff(id, staff_id) {
-  fetch(`http://127.0.0.1:8000/api/complaints/assign/${id}/`, {
+  fetch(`https://hcms-backend.onrender.com/api/complaints/assign/${id}/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

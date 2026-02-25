@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Staff Dashboard | HCMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f4f6f9;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .card {
+      border-radius: 14px;
+      border: none;
+    }
+
+    .badge-status {
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-resolved {
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .complaint-meta {
+      font-size: 0.85rem;
+      color: #6c757d;
+      line-height: 1.6;
+    }
+
+    .update-btn {
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- 🔐 AUTH CHECK -->
+<script>
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+if (!token || role !== "staff") {
+  window.location.href = "login.html";
+}
+</script>
+
+<!-- 🔷 NAVBAR -->
+<nav class="navbar navbar-dark bg-success px-4 shadow">
+  <span class="navbar-brand">HCMS – Staff Panel</span>
+  <button class="btn btn-light btn-sm" onclick="logout()">Logout</button>
+</nav>
+
+<!-- 🔷 CONTENT -->
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold">Assigned Complaints</h4>
+    <span class="text-muted">Staff Access</span>
+  </div>
+
+  <div id="complaints"></div>
+</div>
+
+<script>
+const complaintsDiv = document.getElementById("complaints");
+
+/* 🔒 SAFE HTML ESCAPE */
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  text = String(text);
+
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+/* 📡 FETCH ASSIGNED COMPLAINTS */
+fetch("http://127.0.0.1:8000/api/complaints/staff/", {
+  headers: {
+    "Authorization": "Token " + token
+  }
+})
+.then(res => {
+  if (!res.ok) throw new Error("Failed to load complaints");
+  return res.json();
+})
+.then(data => {
+
+  if (data.length === 0) {
+    complaintsDiv.innerHTML =
+      "<p class='text-muted text-center'>No complaints assigned</p>";
+    return;
+  }
+
+  complaintsDiv.innerHTML = data.map(c => `
+    <div class="card mb-3 shadow-sm ${c.is_overdue ? 'border border-danger border-3' : ''}">
+      <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="fw-bold mb-1">
+              ${escapeHtml(c.title)}
+              <span class="badge bg-${
+                c.priority === "Emergency" ? "danger" :
+                c.priority === "High" ? "warning" :
+                c.priority === "Medium" ? "info" :
+                "secondary"
+              } ms-2">
+                ${escapeHtml(c.priority)}
+              </span>
+            </h6>
+            <p class="mb-2">${escapeHtml(c.description)}</p>
+
+            ${c.image ? `<img src="http://127.0.0.1:8000${c.image}" style="max-width:200px; border-radius:8px; margin-top:10px;" />` : ''}
+
+            <!-- ✅ STUDENT + COMPLAINT DETAILS -->
+            <div class="complaint-meta">
+              <b>Username:</b> ${escapeHtml(c.student_username)} <br>
+              <b>Name:</b> ${escapeHtml(c.student_name)} <br>
+              <b>Room:</b> ${escapeHtml(c.room_number)} <br>
+              <b>Hostel:</b> ${escapeHtml(c.hostel_name)} <br>
+              <b>Phone:</b> ${escapeHtml(c.phone_number)} <br>
+              <b>Email:</b> ${escapeHtml(c.student_email)} <br>
+              <b>Created:</b>
+              ${c.created_at ? new Date(c.created_at).toLocaleString() : "-"}
+            </div>
+            <div class="mt-2">
+              <p class="mt-2">
+                <strong>SLA Deadline:</strong>
+                ${c.sla_deadline ? new Date(c.sla_deadline).toLocaleString() : "Not Set"}
+              </p>
+
+              ${c.is_overdue 
+                  ? '<span class="badge bg-danger">Overdue</span>' 
+                  : '<span class="badge bg-success">Within SLA</span>'}
+            </div>
+          </div>
+
+          <span class="badge badge-status
+            ${c.status === 'Resolved' ? 'status-resolved' : 'status-pending'}">
+            ${escapeHtml(c.status)}
+          </span>
+        </div>
+
+        <hr>
+
+        <!-- 🔄 STATUS UPDATE -->
+        <div class="d-flex justify-content-end">
+          <select class="form-select form-select-sm w-auto me-2"
+                  id="status-${c.id}">
+            <option value="Pending"
+              ${c.status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Resolved"
+              ${c.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+
+          <button class="btn btn-success btn-sm update-btn"
+                  onclick="updateStatus(${c.id})">
+            Update
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `).join("");
+})
+.catch(err => {
+  complaintsDiv.innerHTML =
+    `<p class="text-danger text-center">${err.message}</p>`;
+});
+
+/* 🔄 UPDATE STATUS API */
+function updateStatus(id) {
+  const status = document.getElementById("status-" + id).value;
+
+  fetch(`http://127.0.0.1:8000/api/complaints/update/${id}/`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Token " + token
+    },
+    body: JSON.stringify({ status })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Failed to update status");
+    alert("Status updated successfully");
+    location.reload();
+  })
+  .catch(err => alert(err.message));
+}
+
+/* 🔐 LOGOUT */
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard | HCMS</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
+.card { border-radius:14px; }
+.badge { font-size: 0.85rem; }
+</style>
+</head>
+
+<body>
+
+<script>
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+if (!token || role !== "admin") {
+  window.location.href = "login.html";
+}
+</script>
+
+<nav class="navbar navbar-dark bg-dark px-4">
+  <span class="navbar-brand fw-bold">HCMS – Admin Dashboard</span>
+  <button class="btn btn-light btn-sm" onclick="logout()">Logout</button>
+</nav>
+
+<div class="container mt-4">
+  <h4 class="fw-bold mb-3">All Complaints</h4>
+  <div id="complaints"></div>
+</div>
+
+<script>
+let staffList = [];
+
+/* ======================
+   LOAD STAFF LIST
+====================== */
+fetch("http://127.0.0.1:8000/api/complaints/staff-list/", {
+  headers: { "Authorization": "Token " + token }
+})
+.then(res => res.json())
+.then(data => staffList = data);
+
+
+/* ======================
+   LOAD COMPLAINTS
+====================== */
+fetch("http://127.0.0.1:8000/api/complaints/all/", {
+  headers: { "Authorization": "Token " + token }
+})
+.then(res => {
+  if (!res.ok) throw new Error("Failed to load complaints");
+  return res.json();
+})
+.then(data => renderComplaints(data))
+.catch(err => {
+  document.getElementById("complaints").innerHTML =
+    `<p class="text-danger">${err.message}</p>`;
+});
+
+
+/* ======================
+   RENDER COMPLAINTS
+====================== */
+function renderComplaints(data) {
+  const container = document.getElementById("complaints");
+
+  if (data.length === 0) {
+    container.innerHTML = "<p class='text-muted'>No complaints found</p>";
+    return;
+  }
+
+  container.innerHTML = data.map(c => `
+    <div class="card mb-3 shadow-sm ${c.is_overdue ? 'border border-danger border-3' : ''}">
+      <div class="card-body">
+
+        <h5 class="fw-bold">
+          ${c.title}
+          <span class="badge bg-${
+            c.priority === "Emergency" ? "danger" :
+            c.priority === "High" ? "warning" :
+            c.priority === "Medium" ? "info" :
+            "secondary"
+          } ms-2">
+            ${c.priority}
+          </span>
+        </h5>
+        <p>${c.description}</p>
+
+        ${c.image ? `<img src="http://127.0.0.1:8000${c.image}" style="max-width:200px; border-radius:8px; margin-top:10px;" />` : ''}
+
+        <p><strong>Student:</strong> ${c.student}</p>
+
+        <p>
+          <strong>Status:</strong>
+          <span class="badge bg-${statusColor(c.status)}">
+            ${c.status}
+          </span>
+        </p>
+
+        <!-- UPDATE STATUS -->
+        <div class="mb-2">
+          <select class="form-select form-select-sm"
+                  onchange="updateStatus(${c.id}, this.value)">
+            <option disabled selected>Update Status</option>
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Resolved</option>
+          </select>
+        </div>
+
+        <!-- ASSIGN STAFF -->
+        <div class="mb-2">
+          <select class="form-select form-select-sm"
+                  onchange="assignStaff(${c.id}, this.value)">
+            <option disabled selected>Assign Staff</option>
+            ${staffList.map(s =>
+              `<option value="${s.id}">${s.username}</option>`
+            ).join("")}
+          </select>
+        </div>
+
+        <p class="text-muted mb-0">
+          Assigned Staff: ${c.assigned_staff ?? "Not Assigned"}
+        </p>
+
+      </div>
+    </div>
+  `).join("");
+}
+
+
+/* ======================
+   HELPERS
+====================== */
+function statusColor(status) {
+  if (status === "Resolved") return "success";
+  if (status === "In Progress") return "primary";
+  return "warning";
+}
+
+
+/* ======================
+   UPDATE STATUS
+====================== */
+function updateStatus(id, status) {
+  fetch(`http://127.0.0.1:8000/api/complaints/update/${id}/`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Token " + token
+    },
+    body: JSON.stringify({ status })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Failed to update status");
+    location.reload();
+  })
+  .catch(err => alert(err.message));
+}
+
+
+/* ======================
+   ASSIGN STAFF
+====================== */
+function assignStaff(id, staff_id) {
+  fetch(`http://127.0.0.1:8000/api/complaints/assign/${id}/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Token " + token
+    },
+    body: JSON.stringify({ staff_id })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Failed to assign staff");
+    location.reload();
+  })
+  .catch(err => alert(err.message));
+}
+
+
+/* ======================
+   LOGOUT
+====================== */
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>
